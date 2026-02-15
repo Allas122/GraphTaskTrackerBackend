@@ -1,0 +1,12 @@
+﻿services:
+  graphtasktrackerbackend:
+    image: graphtasktrackerbackend
+    build:
+      context: .
+      dockerfile: GraphTaskTrackerBackend/Dockerfile
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    external: true

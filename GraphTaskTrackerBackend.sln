@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphTaskTrackerBackend", "GraphTaskTrackerBackend\GraphTaskTrackerBackend.csproj", "{40BF329D-4F54-4728-BDA4-D7D30416BD0D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1CD04BEE-3F31-495C-AB22-82214A4D884B}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40BF329D-4F54-4728-BDA4-D7D30416BD0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40BF329D-4F54-4728-BDA4-D7D30416BD0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40BF329D-4F54-4728-BDA4-D7D30416BD0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40BF329D-4F54-4728-BDA4-D7D30416BD0D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
