@@ -18,7 +18,7 @@
       - JwtSettings__ExpirationMinutes=120
       - ConnectionStrings__PostgreSQL=Host=psql_graphdb;Port=5432;Database=graph_db;Username=admin;Password=secret_pass 
   postgres:
-    image: postgres
+    image: postgres:17-alpine
     restart: always
     container_name: psql_graphdb
     environment:
