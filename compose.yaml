@@ -6,7 +6,35 @@
       dockerfile: GraphTaskTrackerBackend/Dockerfile
     networks:
       - proxy-network
+      - backend-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - JwtSettings__SecretKey=SuperSecretLongKeyForHmacSha256123123
+      - JwtSettings__Issuer=GraphBackend
+      - JwtSettings__Audience=Users
+      - JwtSettings__ExpirationMinutes=120
+      - ConnectionStrings__PostgreSQL=Host=psql_graphdb;Port=5432;Database=graph_db;Username=admin;Password=secret_pass 
+  postgres:
+    image: postgres
+    restart: always
+    container_name: psql_graphdb
+    environment:
+      - POSTGRES_DB=graph_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret_pass
+    networks:
+      - backend-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 
 networks:
   proxy-network:
     external: true
+  backend-network:
+    driver: bridge
