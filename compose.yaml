@@ -11,6 +11,7 @@
       postgres:
         condition: service_healthy
     environment:
+      - APP_BASEPATH=/api
       - ASPNETCORE_ENVIRONMENT=Development
       - JwtSettings__SecretKey=SuperSecretLongKeyForHmacSha256123123
       - JwtSettings__Issuer=GraphBackend

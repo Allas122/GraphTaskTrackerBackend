@@ -21,7 +21,8 @@ public static class InfrastructureInjector
         var connectionString = configuration.GetConnectionString("PostgreSQL");
         services.AddOptionsPart(configuration);
         var jwtSettings = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
-
+        var apiPrefix = configuration["APP_BASEPATH"];
+        
         services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -50,8 +51,15 @@ public static class InfrastructureInjector
         services.AddValidatorsFromAssemblyContaining<UserRegistrationRequestValidator>();
         services.AddOpenApi(options =>
         {
+            
+            
             options.AddDocumentTransformer((document, context, ct) =>
             {
+                if (!string.IsNullOrEmpty(apiPrefix))
+                {
+                    document.Servers = new List<OpenApiServer> { new OpenApiServer { Url = apiPrefix } };
+                }
+                
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.Http,

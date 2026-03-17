@@ -12,6 +12,13 @@ builder.Services.AddInfrastructureServices(builder.Configuration)
     .AddApplicationServices();
 
 var app = builder.Build();
+var apiPrefix = app.Configuration["APP_BASEPATH"];
+
+if (!string.IsNullOrEmpty(apiPrefix))
+{
+    app.UsePathBase(apiPrefix);
+}
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
