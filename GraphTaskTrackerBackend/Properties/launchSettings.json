@@ -7,7 +7,11 @@
       "launchBrowser": false,
       "applicationUrl": "http://localhost:5236",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "JwtSettings__SecretKey": "SuperSecretLongKeyForHmacSha256123123",
+        "JwtSettings__Issuer": "GraphBackend",
+        "JwtSettings__Audience": "Users",
+        "JwtSettings__ExpirationMinutes": "120"
       }
     },
     "https": {
