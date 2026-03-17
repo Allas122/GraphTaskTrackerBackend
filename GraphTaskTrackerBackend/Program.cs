@@ -1,12 +1,12 @@
 using GraphTaskTrackerBackend.Application;
 using GraphTaskTrackerBackend.Infrastructure;
+using GraphTaskTrackerBackend.Infrastructure.DataBase;
 using GraphTaskTrackerBackend.Infrastructure.Middlewares;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructureServices(builder.Configuration)
     .AddApplicationServices();
@@ -25,5 +25,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Пока так, позже настрою в пайплайне jenkins.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    dbContext.Database.Migrate();
+}
+
 
 app.Run();
