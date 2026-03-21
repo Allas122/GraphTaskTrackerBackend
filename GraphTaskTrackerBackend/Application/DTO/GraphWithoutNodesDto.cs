@@ -1,15 +1,12 @@
-﻿namespace GraphTaskTrackerBackend.Domain.Entities;
+﻿namespace GraphTaskTrackerBackend.Application.DTO;
 
-public class Graph
+public class GraphWithoutNodesDto
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } 
     public string Name { get; set; }
     public string Description { get; set; }
 
-    public User User { get; set; }
     public Guid UserId { get; set; }
-
-    public ICollection<Node> Nodes { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

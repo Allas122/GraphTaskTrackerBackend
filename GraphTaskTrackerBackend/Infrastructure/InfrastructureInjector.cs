@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using FluentValidation;
 using GraphTaskTrackerBackend.Application.Validators;
+using GraphTaskTrackerBackend.Infrastructure.Configuration;
 using GraphTaskTrackerBackend.Infrastructure.DataBase;
 using GraphTaskTrackerBackend.Infrastructure.Options;
 using GraphTaskTrackerBackend.Infrastructure.Security.Abstractions;
@@ -21,83 +22,16 @@ public static class InfrastructureInjector
         var connectionString = configuration.GetConnectionString("PostgreSQL");
         services.AddOptionsPart(configuration);
         var jwtSettings = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
-        var apiPrefix = configuration["APP_BASEPATH"];
-        
-        services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
+        var apiPrefix = configuration["APP_BASEPATH"] ?? "";
 
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
-                };
-            });
+        services.ConfigureAuthentification(jwtSettings);
         services.AddAuthorization();
         services.AddControllers();
         services.AddDbContext<DatabaseContext>(ob => { ob.UseNpgsql(connectionString); });
         services.AddScoped<IJwtService, JwtService>();
         services.AddEndpointsApiExplorer();
         services.AddValidatorsFromAssemblyContaining<UserRegistrationRequestValidator>();
-        services.AddOpenApi(options =>
-        {
-            
-            
-            options.AddDocumentTransformer((document, context, ct) =>
-            {
-                if (!string.IsNullOrEmpty(apiPrefix))
-                {
-                    document.Servers = new List<OpenApiServer> { new OpenApiServer { Url = apiPrefix } };
-                }
-                
-                var securityScheme = new OpenApiSecurityScheme
-                {
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header
-                };
-                document.Components ??= new OpenApiComponents();
-                document.Components.SecuritySchemes.Add("Bearer", securityScheme);
-                return Task.CompletedTask;
-            });
-            options.AddOperationTransformer((operation, context, ct) =>
-            {
-                var authAttributes = context.Description.ActionDescriptor.EndpointMetadata
-                    .OfType<AuthorizeAttribute>();
-
-                if (authAttributes.Any())
-                {
-                    operation.Security = new List<OpenApiSecurityRequirement>
-                    {
-                        new() {
-                            {
-                                new OpenApiSecurityScheme
-                                {
-                                    Reference = new OpenApiReference 
-                                    { 
-                                        Type = ReferenceType.SecurityScheme, 
-                                        Id = "Bearer" 
-                                    }
-                                },
-                                Array.Empty<string>()
-                            }
-                        }
-                    };
-                }
-                return Task.CompletedTask;
-            });
-        });
+        services.ConfigureOpenApi(apiPrefix);
         return services;
     }
 }

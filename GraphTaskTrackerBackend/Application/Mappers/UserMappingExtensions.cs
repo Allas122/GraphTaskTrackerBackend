@@ -7,5 +7,5 @@ namespace GraphTaskTrackerBackend.Application.Mappers;
 [Mapper]
 public static partial class UserMappingExtensions
 {
-    public static partial UserDTO MapToUserDto(this User user);
+    public static partial UserDto MapToUserDto(this User user);
 }

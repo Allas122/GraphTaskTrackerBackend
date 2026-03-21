@@ -8,10 +8,12 @@ namespace GraphTaskTrackerBackend.Infrastructure.Middlewares;
 public class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
-
-    public ExceptionMiddleware(RequestDelegate next)
+    private readonly ILogger<ExceptionMiddleware> _logger;
+    
+    public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -28,6 +30,19 @@ public class ExceptionMiddleware
         {
             await HandleApplicationExceptionAsync(context, exception);
         }
+        catch(Exception exception)
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
+            _logger.LogError(exception, "An unhandled exception occurred while processing the request.");
+            var response = new ErrorResponse 
+            {
+                Title = "Internal Server Error",
+                Status = 500,
+                Error = "Oops! Something went wrong."
+            };
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        }
     }
 
     private static Task HandleApplicationExceptionAsync(HttpContext context, ApplicationExceptionBase exception)
@@ -38,6 +53,7 @@ public class ExceptionMiddleware
             AlreadyExistsException => (StatusCodes.Status409Conflict, "Conflict"),
             NotFound => (StatusCodes.Status404NotFound, "Not Found"),
             InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            Unprocessable => (StatusCodes.Status422UnprocessableEntity, "Unprocessable"),
             _ => (StatusCodes.Status400BadRequest, "Application Error")
         };
 

@@ -21,7 +21,7 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<UserDTO> CreateUserAsync(VerifyUserDto user)
+    public async Task<UserDto> CreateUserAsync(VerifyUserDto user)
     {
         var userEntity = new User
         {
@@ -35,15 +35,15 @@ public class UserService : IUserService
         return userEntity.MapToUserDto();
     }
 
-    public async Task<UserDTO> GetUserByNameAsync(string name)
+    public async Task<UserDto> GetUserByNameAsync(string name)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<UserDTO> Login(VerifyUserDto user)
+    public async Task<UserDto> Login(VerifyUserDto user)
     {
-        var result= await _databaseContext.Users.FirstAsync(u=>u.Name == user.Name);
-        if (user == null) throw new NotFound("The user does not exist");
+        var result= await _databaseContext.Users.FirstOrDefaultAsync(u=>u.Name == user.Name);
+        if (result == null) throw new NotFound("The user does not exist");
         if(!BCrypt.Net.BCrypt.Verify(user.Password, result.PasswordHash)) throw new InvalidCredentialsException("Invalid password");
         return result.MapToUserDto();
     }

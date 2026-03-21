@@ -33,12 +33,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Пока так, позже настрою в пайплайне jenkins.
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     dbContext.Database.Migrate();
 }
-
 
 app.Run();

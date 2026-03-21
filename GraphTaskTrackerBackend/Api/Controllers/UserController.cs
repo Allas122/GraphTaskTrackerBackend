@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace GraphTaskTrackerBackend.Api.Controllers;
 
 [ApiController]
+[Route("/user")]
+[ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
@@ -30,11 +33,9 @@ public class UserController : ControllerBase
         _userValidator = userValidator;
     }
 
-    [HttpPost("/user/registration")]
-    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
+    [HttpPost("/registration")]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<TokenResponse>> Register(
+    public async Task<ActionResult<TokenResponse>> RegisterAsync(
         VerifyUserRequest request)
     {
         await _userValidator.ValidateAndThrowAsync(request);
@@ -45,11 +46,9 @@ public class UserController : ControllerBase
             Token = _jwtService.GenerateToken(user.Id)
         });
     }
-    [HttpPost("/user/login")]
-    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
+    [HttpPost("/login")]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<TokenResponse>> Login(VerifyUserRequest request)
+    public async Task<ActionResult<TokenResponse>> LoginAsync(VerifyUserRequest request)
     {
         await _userValidator.ValidateAndThrowAsync(request);
         var user = await _userService.Login(request.MapToVerifyUserDto());
