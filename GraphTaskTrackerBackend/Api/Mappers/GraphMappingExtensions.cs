@@ -8,6 +8,7 @@ namespace GraphTaskTrackerBackend.Api.Mappers;
 public static partial class GraphMappingExtensions
 {
     public static partial CreateGraphDto MapToCreateGraphDto(this CreateGraphRequest createGraph);
-    public static partial CreateGraphResponse MapToCreateGraphResponse(this GraphDto graph);
     public static partial CreateGraphResponse MapToCreateGraphResponse(this GraphWithoutNodesDto graph);
+    public static partial SyncGraphDto MapToSyncGraphDto(this SyncGraphRequest syncGraph);
+    
 }

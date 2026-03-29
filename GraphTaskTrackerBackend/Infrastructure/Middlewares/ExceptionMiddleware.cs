@@ -54,6 +54,8 @@ public class ExceptionMiddleware
             NotFound => (StatusCodes.Status404NotFound, "Not Found"),
             InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
             Unprocessable => (StatusCodes.Status422UnprocessableEntity, "Unprocessable"),
+            Forbidden => (StatusCodes.Status403Forbidden, "Forbidden"),
+            Conflict => (StatusCodes.Status409Conflict, "Conflict"),
             _ => (StatusCodes.Status400BadRequest, "Application Error")
         };
 

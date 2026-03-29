@@ -1,9 +1,8 @@
-﻿namespace GraphTaskTrackerBackend.Application.DTO;
+﻿namespace GraphTaskTrackerBackend.Api.Models;
 
-public class NodeDto
+public class CreateNodeMessage
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
-    public Guid GraphId { get; set; }
 }

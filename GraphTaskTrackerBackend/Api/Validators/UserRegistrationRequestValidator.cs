@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using GraphTaskTrackerBackend.Api.Models;
 
-namespace GraphTaskTrackerBackend.Application.Validators;
+namespace GraphTaskTrackerBackend.Api.Validators;
 
 public class UserRegistrationRequestValidator : AbstractValidator<VerifyUserRequest>
 {

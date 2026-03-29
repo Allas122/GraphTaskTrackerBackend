@@ -40,4 +40,20 @@ public class GraphController : ControllerBase
         var result = await _graphService.CreateGraphWithoutNodesAsync(dto);
         return Ok(result.MapToCreateGraphResponse());
     }
+
+    [Authorize]
+    [HttpPut("/sync")]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<string> SyncGraph(
+        SyncGraphRequest request,
+        [FromServices] IValidator<SyncGraphRequest> validator)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) throw new UnauthorizedAccessException("Unauthorized");
+        validator.ValidateAndThrow(request);
+        var dto = request.MapToSyncGraphDto();
+        dto.UserId = Guid.Parse(userId);
+        await _graphService.SynchronizeGraphAsync(dto);
+        return "Your graph has been synced";
+    }
 }

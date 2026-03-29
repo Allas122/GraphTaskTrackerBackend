@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using FluentValidation;
-using GraphTaskTrackerBackend.Application.Validators;
+using GraphTaskTrackerBackend.Api.Validators;
 using GraphTaskTrackerBackend.Infrastructure.Configuration;
 using GraphTaskTrackerBackend.Infrastructure.DataBase;
 using GraphTaskTrackerBackend.Infrastructure.Options;
