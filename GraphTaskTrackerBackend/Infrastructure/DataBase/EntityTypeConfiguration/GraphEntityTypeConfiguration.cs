@@ -4,15 +4,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GraphTaskTrackerBackend.Infrastructure.DataBase.EntityTypeConfiguration;
 
-public class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
+public class GraphEntityTypeConfiguration : IEntityTypeConfiguration<Graph>
 {
-    public void Configure(EntityTypeBuilder<User> builder)
+    public void Configure(EntityTypeBuilder<Graph> builder)
     {
-        builder.HasIndex(e => e.Name, "IX_User_Name_Unique")
-            .IsUnique();
-
         builder
-            .HasIndex(e => e.Name, "IX_User_Name_Gin")
+            .HasIndex(e => e.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+        builder
+            .HasIndex(e => e.Description)
             .HasMethod("gin")
             .HasOperators("gin_trgm_ops");
     }

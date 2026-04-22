@@ -3,6 +3,6 @@
 public class SyncGraphRequest
 {
     public Guid GraphId { get; set; }
-    public ICollection<CreateNodeMessage> Nodes { get; set; }
-    public ICollection<EdgeMessage> Edges { get; set; }
+    public List<CreateNodeMessage> Nodes { get; set; }
+    public List<EdgeMessage> Edges { get; set; }
 }

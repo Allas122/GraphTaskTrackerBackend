@@ -17,7 +17,7 @@ public class NodeEntityTypeConfiguration : IEntityTypeConfiguration<Node>
                 l => l.HasOne(e => e.ToNode)
                     .WithMany()
                     .HasForeignKey(e => e.ToNodeId)
-                    .OnDelete(DeleteBehavior.Cascade),
+                    .OnDelete(DeleteBehavior.Restrict),
                 r => r.HasOne(e => e.FromNode)
                     .WithMany()
                     .HasForeignKey(e => e.FromNodeId)
@@ -33,5 +33,28 @@ public class NodeEntityTypeConfiguration : IEntityTypeConfiguration<Node>
             .WithMany(g => g.Nodes)
             .HasForeignKey(n => n.GraphId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasOne(n => n.Author)
+            .WithMany(u => u.AuthorNodes)
+            .HasForeignKey(n => n.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(e => e.Assigned)
+            .WithMany(u => u.AssignedNodes)
+            .UsingEntity<AssignedUser>(
+                "AssignedUserNodes",
+                l => l.HasOne(au => au.User)
+                    .WithMany()
+                    .HasForeignKey(au => au.UserId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                r => r.HasOne(au => au.Node)
+                    .WithMany()
+                    .HasForeignKey(au => au.NodeId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => 
+                {
+                    j.HasKey(au => new { au.NodeId, au.UserId }); // Составной ключ
+                }
+                );
     }
 }

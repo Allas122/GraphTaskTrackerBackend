@@ -10,5 +10,7 @@ public static partial class GraphMappingExtensions
     public static partial CreateGraphDto MapToCreateGraphDto(this CreateGraphRequest createGraph);
     public static partial CreateGraphResponse MapToCreateGraphResponse(this GraphWithoutNodesDto graph);
     public static partial SyncGraphDto MapToSyncGraphDto(this SyncGraphRequest syncGraph);
-    
+    public static partial ICollection<GraphCartResponse> MapToListOfGraphCartResponses(this IEnumerable<GraphDto> graph);
+    public static partial ICollection<GraphCartResponse> MapToListOfGraphCartResponses(this IEnumerable<GraphWithoutNodesDto> graph);
+
 }

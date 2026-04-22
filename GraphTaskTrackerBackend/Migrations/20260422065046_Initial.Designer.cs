@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GraphTaskTrackerBackend.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20260319182742_2")]
-    partial class _2
+    [Migration("20260422065046_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,7 +23,23 @@ namespace GraphTaskTrackerBackend.Migrations
                 .HasAnnotation("ProductVersion", "9.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("AssignedUserNodes", b =>
+                {
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("NodeId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AssignedUserNodes");
+                });
 
             modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.Edge", b =>
                 {
@@ -40,7 +56,7 @@ namespace GraphTaskTrackerBackend.Migrations
 
                     b.HasIndex("ToNodeId");
 
-                    b.ToTable("Edges");
+                    b.ToTable("Edges", (string)null);
                 });
 
             modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.Graph", b =>
@@ -68,6 +84,16 @@ namespace GraphTaskTrackerBackend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Description");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Description"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Description"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("Name");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Graphs");
@@ -78,6 +104,12 @@ namespace GraphTaskTrackerBackend.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -90,16 +122,16 @@ namespace GraphTaskTrackerBackend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("NodeId")
-                        .HasColumnType("uuid");
+                    b.Property<TimeSpan>("Time")
+                        .HasColumnType("interval");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AuthorId");
+
                     b.HasIndex("GraphId");
 
-                    b.HasIndex("NodeId");
-
-                    b.ToTable("Nodes");
+                    b.ToTable("Nodes", (string)null);
                 });
 
             modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.User", b =>
@@ -107,6 +139,9 @@ namespace GraphTaskTrackerBackend.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -118,10 +153,34 @@ namespace GraphTaskTrackerBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
+                    b.HasIndex(new[] { "Name" }, "IX_User_Name_Gin");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "Name" }, "IX_User_Name_Gin"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex(new[] { "Name" }, "IX_User_Name_Gin"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex(new[] { "Name" }, "IX_User_Name_Unique")
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("AssignedUserNodes", b =>
+                {
+                    b.HasOne("GraphTaskTrackerBackend.Domain.Entities.Node", "Node")
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GraphTaskTrackerBackend.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Node");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.Edge", b =>
@@ -129,7 +188,7 @@ namespace GraphTaskTrackerBackend.Migrations
                     b.HasOne("GraphTaskTrackerBackend.Domain.Entities.Node", "FromNode")
                         .WithMany()
                         .HasForeignKey("FromNodeId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GraphTaskTrackerBackend.Domain.Entities.Node", "ToNode")
@@ -156,15 +215,19 @@ namespace GraphTaskTrackerBackend.Migrations
 
             modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.Node", b =>
                 {
+                    b.HasOne("GraphTaskTrackerBackend.Domain.Entities.User", "Author")
+                        .WithMany("AuthorNodes")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("GraphTaskTrackerBackend.Domain.Entities.Graph", "Graph")
                         .WithMany("Nodes")
                         .HasForeignKey("GraphId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GraphTaskTrackerBackend.Domain.Entities.Node", null)
-                        .WithMany("Nodes")
-                        .HasForeignKey("NodeId");
+                    b.Navigation("Author");
 
                     b.Navigation("Graph");
                 });
@@ -174,13 +237,10 @@ namespace GraphTaskTrackerBackend.Migrations
                     b.Navigation("Nodes");
                 });
 
-            modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.Node", b =>
-                {
-                    b.Navigation("Nodes");
-                });
-
             modelBuilder.Entity("GraphTaskTrackerBackend.Domain.Entities.User", b =>
                 {
+                    b.Navigation("AuthorNodes");
+
                     b.Navigation("Graphs");
                 });
 #pragma warning restore 612, 618

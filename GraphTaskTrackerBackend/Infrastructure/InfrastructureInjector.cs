@@ -3,6 +3,9 @@ using FluentValidation;
 using GraphTaskTrackerBackend.Api.Validators;
 using GraphTaskTrackerBackend.Infrastructure.Configuration;
 using GraphTaskTrackerBackend.Infrastructure.DataBase;
+using GraphTaskTrackerBackend.Infrastructure.Events.Abstractions;
+using GraphTaskTrackerBackend.Infrastructure.Events.Implementations;
+using GraphTaskTrackerBackend.Infrastructure.Events.Implementations.Messages;
 using GraphTaskTrackerBackend.Infrastructure.Options;
 using GraphTaskTrackerBackend.Infrastructure.Security.Abstractions;
 using GraphTaskTrackerBackend.Infrastructure.Security.Implementation;
@@ -29,6 +32,9 @@ public static class InfrastructureInjector
         services.AddControllers();
         services.AddDbContext<DatabaseContext>(ob => { ob.UseNpgsql(connectionString); });
         services.AddScoped<IJwtService, JwtService>();
+        
+        services.AddSingleton<IEventController<Guid,GraphEvent>, GraphEventController>();
+        
         services.AddEndpointsApiExplorer();
         services.AddValidatorsFromAssemblyContaining<UserRegistrationRequestValidator>();
         services.ConfigureOpenApi(apiPrefix);

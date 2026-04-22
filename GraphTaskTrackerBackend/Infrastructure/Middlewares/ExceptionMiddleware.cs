@@ -9,7 +9,7 @@ public class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionMiddleware> _logger;
-    
+
     public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
     {
         _next = next;
@@ -22,32 +22,52 @@ public class ExceptionMiddleware
         {
             await _next(context);
         }
-        catch (ValidationException exception)
-        {
-            await HandleValidationExceptionAsync(context, exception);
+        catch (OperationCanceledException)
+        { 
+            _logger.LogInformation("Request was cancelled (client disconnected).");
         }
-        catch (ApplicationExceptionBase exception)
+        catch (Exception exception)
         {
-            await HandleApplicationExceptionAsync(context, exception);
-        }
-        catch(Exception exception)
-        {
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/json";
-            _logger.LogError(exception, "An unhandled exception occurred while processing the request.");
-            var response = new ErrorResponse 
+            if (context.Response.HasStarted)
             {
-                Title = "Internal Server Error",
-                Status = 500,
-                Error = "Oops! Something went wrong."
-            };
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                _logger.LogWarning(exception,
+                    "The response has already started. Cannot write error JSON. Connection will be closed.");
+                throw;
+            }
+            if (exception is ValidationException validationException)
+            {
+                await HandleValidationExceptionAsync(context, validationException);
+            }
+            else if (exception is ApplicationExceptionBase appException)
+            {
+                await HandleApplicationExceptionAsync(context, appException);
+            }
+            else
+            {
+                await HandleGenericExceptionAsync(context, exception);
+            }
         }
+    }
+
+    private async Task HandleGenericExceptionAsync(HttpContext context, Exception exception)
+    {
+        _logger.LogError(exception, "An unhandled exception occurred while processing the request.");
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var response = new ErrorResponse
+        {
+            Title = "Internal Server Error",
+            Status = 500,
+            Error = "Oops! Something went wrong."
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 
     private static Task HandleApplicationExceptionAsync(HttpContext context, ApplicationExceptionBase exception)
     {
-        context.Response.ContentType = "application/json";
         var (statusCode, title) = exception switch
         {
             AlreadyExistsException => (StatusCodes.Status409Conflict, "Conflict"),
@@ -59,15 +79,16 @@ public class ExceptionMiddleware
             _ => (StatusCodes.Status400BadRequest, "Application Error")
         };
 
+        context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
-    
-        var response = new ErrorResponse 
+
+        var response = new ErrorResponse
         {
             Title = title,
             Status = statusCode,
             Error = exception.Message
         };
-    
+
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 
@@ -83,7 +104,7 @@ public class ExceptionMiddleware
                 g => g.Select(f => f.ErrorMessage).ToArray()
             );
 
-        var response = new ValidationErrorResponse 
+        var response = new ValidationErrorResponse
         {
             Errors = errors
         };

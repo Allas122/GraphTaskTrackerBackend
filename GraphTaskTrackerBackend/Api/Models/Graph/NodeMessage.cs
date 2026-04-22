@@ -1,6 +1,6 @@
-﻿namespace GraphTaskTrackerBackend.Application.DTO;
+﻿namespace GraphTaskTrackerBackend.Api.Models;
 
-public class NodeDto
+public class NodeMessage
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
@@ -9,8 +9,6 @@ public class NodeDto
     public DateTime CreatedAt { get; set; }
     public TimeSpan Time { get; set; }
     
-    public Guid AuthorId { get; set; }
-    
-    public List<UserCardDto> Assigned { get; set; }
-    public Guid GraphId { get; set; }
+    public UserMessage Author { get; set; }
+    public List<UserMessage> Assigned { get; set; }
 }

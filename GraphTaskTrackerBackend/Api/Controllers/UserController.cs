@@ -2,6 +2,7 @@
 using FluentValidation;
 using GraphTaskTrackerBackend.Api.Mappers;
 using GraphTaskTrackerBackend.Api.Models;
+using GraphTaskTrackerBackend.Application.DTO;
 using GraphTaskTrackerBackend.Application.Services.Abstractions;
 using GraphTaskTrackerBackend.Infrastructure.Security.Abstractions;
 using Microsoft.AspNetCore.Authorization;
@@ -60,9 +61,23 @@ public class UserController : ControllerBase
     
     [Authorize]
     [HttpPost("/user/me")]
-    public async Task<ActionResult<string>> Me()
+    public async Task<ActionResult<ProfileMessage>> Me()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Ok(userId);
+        var userId =Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        var user= await _userService.GetUserByIdAsync(userId);
+        return Ok(user.MapTOProfileMessage());
+    }
+
+    [Authorize]
+    [HttpGet("/user/list")]
+    public async Task<ActionResult<List<UserMessage>>> GetUsers(
+        [FromQuery] PaginationQuery pq,
+        [FromServices] IValidator<PaginationQuery> validator)
+    {
+        await validator.ValidateAndThrowAsync(pq);
+        var users = 
+            (await _userService.GetPaginatedListOfUserDtosAsync(pq.PageNumber,pq.PageSize,pq.KeyWordForSearch))
+            .MapToListOfUserMessages();
+        return Ok(users);
     }
 }

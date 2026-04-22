@@ -13,9 +13,12 @@ public class DatabaseContext : DbContext
     public DbSet<Graph> Graphs { get; set; }
     public DbSet<Node> Nodes { get; set; }
     public DbSet<Edge> Edges { get; set; }
+    
+    public DbSet<AssignedUser> AssignedUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DatabaseContext).Assembly);
+        modelBuilder.HasPostgresExtension("pg_trgm");
     }
 }

@@ -3,9 +3,9 @@ using GraphTaskTrackerBackend.Api.Models;
 
 namespace GraphTaskTrackerBackend.Api.Validators;
 
-public class NodeMessageValidator : AbstractValidator<NodeMessage>
+public class CreateNodeMessageValidator : AbstractValidator<CreateNodeMessage>
 {
-    public NodeMessageValidator()
+    public CreateNodeMessageValidator()
     {
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Node Id is required.");

@@ -12,7 +12,7 @@ public class SyncGraphRequestValidator : AbstractValidator<SyncGraphRequest>
         RuleFor(x => x.GraphId)
             .NotEmpty().WithMessage("GraphId is required.");
         
-        RuleForEach(x => x.Nodes).SetValidator(new NodeMessageValidator());
+        RuleForEach(x => x.Nodes).SetValidator(new CreateNodeMessageValidator());
         RuleForEach(x => x.Edges).SetValidator(new EdgeMessageValidator());
         
         RuleFor(x => x.Nodes)

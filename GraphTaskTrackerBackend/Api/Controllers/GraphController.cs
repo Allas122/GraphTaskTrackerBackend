@@ -1,10 +1,14 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text.Json;
 using FluentValidation;
 using GraphTaskTrackerBackend.Api.Mappers;
 using GraphTaskTrackerBackend.Api.Models;
 using GraphTaskTrackerBackend.Application.DTO;
 using GraphTaskTrackerBackend.Application.Mappers;
 using GraphTaskTrackerBackend.Application.Services.Abstractions;
+using GraphTaskTrackerBackend.Infrastructure.Events.Abstractions;
+using GraphTaskTrackerBackend.Infrastructure.Events.Implementations.Messages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,12 +21,16 @@ namespace GraphTaskTrackerBackend.Api.Controllers;
 [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
 public class GraphController : ControllerBase
 {
-    private IGraphService _graphService;
+    private readonly IGraphService _graphService;
+    private readonly IEventController<Guid, GraphEvent> _graphEventController;
+    
     public GraphController(
-        IGraphService graphService
+        IGraphService graphService,
+        IEventController<Guid, GraphEvent> graphEventService
         )
     {
         _graphService = graphService;
+        _graphEventController = graphEventService;
     }
 
     [Authorize]
@@ -42,7 +50,7 @@ public class GraphController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("/sync")]
+    [HttpPatch("/sync")]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<string> SyncGraph(
         SyncGraphRequest request,
@@ -53,7 +61,58 @@ public class GraphController : ControllerBase
         validator.ValidateAndThrow(request);
         var dto = request.MapToSyncGraphDto();
         dto.UserId = Guid.Parse(userId);
-        await _graphService.SynchronizeGraphAsync(dto);
+        await _graphService.SynchronizeGraphAsync(dto, Guid.Parse(userId));
         return "Your graph has been synced";
+    }
+
+    private async Task NotifySSE(CancellationToken ct, Guid graphId)
+    {
+        var state = await _graphService.GetSyncGraphDtoByGraphIdAsync(graphId);
+        var json = JsonSerializer.Serialize(state.MapToSyncGraphResponse());
+        await Response.WriteAsync($"data:{json}\n\n");
+        await Response.Body.FlushAsync(ct);
+    }
+    
+    [HttpGet("/{graphId}/sse")]
+    [Authorize]
+    public async Task GetSse([FromRoute] Guid graphId, CancellationToken ct)
+    {
+        Response.ContentType = "text/event-stream";
+        Response.Headers.Add("Cache-Control", "no-cache");
+        Response.Headers.Add("X-Accel-Buffering", "no");
+        
+        await NotifySSE(ct, graphId);
+        
+        var eventStream = _graphEventController.SubscribeAsync(graphId,ct);
+        await foreach (var ev in eventStream.WithCancellation(ct))
+        {
+            await NotifySSE(ct, graphId);
+        }
+    }
+
+    [HttpPost("/make-assigned")]
+    [Authorize]
+    public async Task<string> MakeAssigned([FromBody] MakeAssignedRequest req)
+    {
+        await _graphService.AddAssignedUserAsync(req.UserId, req.NodeId);
+        return "Ok!";
+    }
+    [HttpPost("/remove-assigned")]
+    [Authorize]
+    public async Task<string> RemoveAssigned([FromBody] MakeAssignedRequest req)
+    {
+        await _graphService.RemoveAssignedUserAsync(req.UserId, req.NodeId);
+        return "Ok!";
+    }
+
+    [HttpGet("/get-paginated-graph")]
+    [Authorize]
+    public async Task<ActionResult<ICollection<GraphCartResponse>>> GetPaginatedGraph(
+        [FromQuery] PaginationQuery query,
+        [FromServices] IValidator<PaginationQuery> validator)
+    {
+        await validator.ValidateAndThrowAsync(query);
+        var a = await _graphService.GetPaginatedListOfGraphDtosAsync(query.PageNumber, query.PageSize, query.KeyWordForSearch);
+        return Ok(a.MapToListOfGraphCartResponses());
     }
 }

@@ -4,6 +4,8 @@ using GraphTaskTrackerBackend.Application.Mappers;
 using GraphTaskTrackerBackend.Application.Services.Abstractions;
 using GraphTaskTrackerBackend.Domain.Entities;
 using GraphTaskTrackerBackend.Infrastructure.DataBase;
+using GraphTaskTrackerBackend.Infrastructure.Events.Abstractions;
+using GraphTaskTrackerBackend.Infrastructure.Events.Implementations.Messages;
 using Microsoft.EntityFrameworkCore;
 
 namespace GraphTaskTrackerBackend.Application.Services.Implementations;
@@ -12,7 +14,6 @@ public class UserService : IUserService
 {
     private readonly DatabaseContext _databaseContext;
     private readonly ILogger<UserService> _logger;
-
     public UserService(
         DatabaseContext databaseContext,
         ILogger<UserService> logger)
@@ -35,9 +36,14 @@ public class UserService : IUserService
         return userEntity.MapToUserDto();
     }
 
-    public async Task<UserDto> GetUserByNameAsync(string name)
+    public async Task<UserDto> GetUserByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var userEntity = await _databaseContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (userEntity == null)
+        {
+            throw new NotFound("The user does not exist");
+        }
+        return userEntity.MapToUserDto();
     }
 
     public async Task<UserDto> Login(VerifyUserDto user)
@@ -46,5 +52,25 @@ public class UserService : IUserService
         if (result == null) throw new NotFound("The user does not exist");
         if(!BCrypt.Net.BCrypt.Verify(user.Password, result.PasswordHash)) throw new InvalidCredentialsException("Invalid password");
         return result.MapToUserDto();
+    }
+
+    public async Task<ICollection<UserDto>> GetPaginatedListOfUserDtosAsync(int pageNumber, int pageSize, string? keyWordForSearch)
+    {
+        IQueryable<User> query = _databaseContext.Users;
+
+        if (!string.IsNullOrWhiteSpace(keyWordForSearch))
+        {
+            var searchPattern = $"%{keyWordForSearch}%";
+            query = query.Where(n => EF.Functions.ILike(n.Name, searchPattern));
+        }
+
+        var users = await query
+            .OrderBy(n => n.Name)
+            .ThenBy(n => n.Id)
+            .Skip(pageSize * (pageNumber - 1))
+            .Take(pageSize)
+            .ToListAsync();
+
+        return users.MapToListOfUserDtos();
     }
 }
