@@ -144,7 +144,12 @@ public class GraphService : IGraphService
                 var existingNodes = await _databaseContext.Nodes
                     .Include(n => n.Assigned) 
                     .Where(n => incomingNodeIds.Contains(n.Id)).ToListAsync();
-                
+
+                var conflictNodesIds = await _databaseContext.Nodes
+                    .Where(n => incomingNodeIds.Contains(n.Id) && n.GraphId != dto.GraphId)
+                    .Select(n=>n.Id).ToListAsync();
+                if(conflictNodesIds.Count > 0)
+                    throw new Conflict($"Conflict node IDs : [{string.Join(", ",conflictNodesIds)}]");
                 var existingIdsSet = existingNodes.Select(n => n.Id).ToHashSet();
                 
                 var assignedUserIds = dto.Nodes
@@ -191,9 +196,6 @@ public class GraphService : IGraphService
                     newNode.GraphId = dto.GraphId;
                     newNode.CreatedAt = DateTime.UtcNow;
                     newNode.AuthorId = userId;
-                    // newNode.Time = incomingNode.Time;
-                    // newNode.Name = newNode.Name;
-                    // newNode.Description = newNode.Description;
                     newNode.Assigned = nodeAssigned[newNode.Id]
                         .Select(id => assignedUsersDict[id])
                         .ToList();
