@@ -133,6 +133,13 @@ public class GraphService : IGraphService
         return graphs.MapToListOfGraphWithoutNodesDtos();
     }
 
+    public async Task DeleteGraphByIdAsync(Guid id)
+    {
+        await _databaseContext.Graphs
+            .Where(g => g.Id == id)
+            .ExecuteDeleteAsync();
+    }
+
     private async Task ExecuteBulkSynchronizationAsync(SyncGraphDto dto, Guid userId, List<Guid> incomingNodeIds)
     {
         await _databaseContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
@@ -236,4 +243,5 @@ public class GraphService : IGraphService
         var unexistingIds = assignedUserIds.Except(existingIds).ToArray();
         return unexistingIds;
     }
+    
 }

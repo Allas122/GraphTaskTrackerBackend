@@ -11,4 +11,5 @@ public interface IGraphService
     public Task AddAssignedUserAsync(Guid userId, Guid nodeId);
     public Task RemoveAssignedUserAsync(Guid userId, Guid nodeId);
     public Task<ICollection<GraphWithoutNodesDto>> GetPaginatedListOfGraphDtosAsync(int pageNumber, int pageSize, string? keyWordForSearch);
+    public Task DeleteGraphByIdAsync(Guid id);
 }

@@ -115,4 +115,11 @@ public class GraphController : ControllerBase
         var a = await _graphService.GetPaginatedListOfGraphDtosAsync(query.PageNumber, query.PageSize, query.KeyWordForSearch);
         return Ok(a.MapToListOfGraphCartResponses());
     }
+
+    [HttpDelete("/{graphId}")]
+    [Authorize]
+    public async Task DeleteGraph([FromRoute] Guid graphId)
+    {
+        await _graphService.DeleteGraphByIdAsync(graphId);
+    }
 }

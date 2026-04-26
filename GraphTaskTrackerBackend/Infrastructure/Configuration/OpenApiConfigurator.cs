@@ -9,8 +9,6 @@ public static class OpenApiConfigurator
     {
         services.AddOpenApi(options =>
         {
-            
-            
             options.AddDocumentTransformer((document, context, ct) =>
             {
                 if (!string.IsNullOrEmpty(apiPrefix))
