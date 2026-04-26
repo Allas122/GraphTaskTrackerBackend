@@ -17,7 +17,7 @@ public class NodeEntityTypeConfiguration : IEntityTypeConfiguration<Node>
                 l => l.HasOne(e => e.ToNode)
                     .WithMany()
                     .HasForeignKey(e => e.ToNodeId)
-                    .OnDelete(DeleteBehavior.Restrict),
+                    .OnDelete(DeleteBehavior.Cascade),
                 r => r.HasOne(e => e.FromNode)
                     .WithMany()
                     .HasForeignKey(e => e.FromNodeId)
