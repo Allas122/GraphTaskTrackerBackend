@@ -105,8 +105,10 @@ public class GraphController : ControllerBase
         return "Ok!";
     }
 
-    [HttpGet("/get-paginated-graph")]
+    
     [Authorize]
+    [HttpGet("/get-paginated-graph")]
+    [ProducesResponseType(typeof(ICollection<GraphCartResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ICollection<GraphCartResponse>>> GetPaginatedGraph(
         [FromQuery] PaginationQuery query,
         [FromServices] IValidator<PaginationQuery> validator)
