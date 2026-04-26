@@ -73,6 +73,14 @@ public class GraphController : ControllerBase
         await Response.Body.FlushAsync(ct);
     }
     
+    [HttpGet("/{graphId}")]
+    [Authorize]
+    [ProducesResponseType(typeof(SyncGraphResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<SyncGraphResponse>> Get([FromRoute] Guid graphId, CancellationToken ct)
+    {
+        return (await _graphService.GetSyncGraphDtoByGraphIdAsync(graphId)).MapToSyncGraphResponse();
+    }
+    
     [HttpGet("/{graphId}/sse")]
     [Authorize]
     [ProducesResponseType(typeof(SyncGraphResponse), StatusCodes.Status200OK)]
