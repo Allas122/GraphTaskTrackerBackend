@@ -75,6 +75,7 @@ public class GraphController : ControllerBase
     
     [HttpGet("/{graphId}/sse")]
     [Authorize]
+    [ProducesResponseType(typeof(SyncGraphResponse), StatusCodes.Status200OK)]
     public async Task GetSse([FromRoute] Guid graphId, CancellationToken ct)
     {
         Response.ContentType = "text/event-stream";
