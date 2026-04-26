@@ -60,7 +60,7 @@ public class UserController : ControllerBase
     }
     
     [Authorize]
-    [HttpPost("/user/me")]
+    [HttpGet("/user/me")]
     public async Task<ActionResult<ProfileMessage>> Me()
     {
         var userId =Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
