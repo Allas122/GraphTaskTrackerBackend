@@ -70,6 +70,7 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpGet("/user/list")]
+    [ProducesResponseType(typeof(ICollection<UserMessage>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<UserMessage>>> GetUsers(
         [FromQuery] PaginationQuery pq,
         [FromServices] IValidator<PaginationQuery> validator)
