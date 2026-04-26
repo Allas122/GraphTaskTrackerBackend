@@ -9,7 +9,7 @@ public class CreateGraphRequestValidator : AbstractValidator<CreateGraphRequest>
     {
         RuleFor(u=>u.Name)
             .NotNull().NotEmpty().WithMessage("Name is required")
-            .Length(10,50).WithMessage("Name must be between 10 and 50 characters long");
+            .Length(1,1500).WithMessage("Name must be between 1 and 1500 characters long");
         RuleFor(u => u.Description)
             .MaximumLength(2500).WithMessage("Description cannot exceed 2500 characters");
     }
